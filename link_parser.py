@@ -4,7 +4,7 @@ import requests # for downloading stuff
 
 # Get the page to find links for
 # create the url using the first argument.  Has to be nintendo for now
-url = 'http://www.vgmusic.com/music/console/nintendo/' + sys.argv[1]
+url = 'http://www.vgmusic.com/music/console/nintendo/' + sys.argv[1] + '/'
 # create the request for the web page
 r = requests.get(url)
 # get the page contents
@@ -17,9 +17,23 @@ html_file = open("music_page.html")
 
 # create a subclass and override the handler methods
 class MyHTMLParser(HTMLParser):
+	def __init__(self, the_filter):
+		HTMLParser.__init__(self)
+		self.filter = the_filter
+		self.in_filter = False
+
 	def handle_starttag(self, tag, attrs):
-		#print "Encountered a start tag:", tag
+		print "Encountered a start tag:", tag
 		for attr in attrs:
+			print "ATTRIBUTE:", attr
+
+			# check for filter
+			if attr[0] == 'name':
+				if attr[1].contains(self.filter):
+					# TODO: some stuff idk
+					self.in_filter = True
+					pass
+
 			# make sure you're reading a link
 			if attr[0] == 'href':
 				# check if it's a midi file
@@ -30,11 +44,11 @@ class MyHTMLParser(HTMLParser):
 
 	def handle_endtag(self, tag):
 		pass
-		#print "Encountered an end tag :", tag
+		print "Encountered an end tag :", tag
 	
 	def handle_data(self, data):
 		pass
-		#print "Encountered some data  :", data
+		print "Encountered some data  :", data
 
 # instantiate the parser and fed it some HTML
 parser = MyHTMLParser()
