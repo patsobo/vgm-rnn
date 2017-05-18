@@ -1,7 +1,19 @@
 from HTMLParser import HTMLParser
 import sys
+import requests # for downloading stuff
 
-html_page = sys.argv[1]
+# Get the page to find links for
+# create the url using the first argument.  Has to be nintendo for now
+url = 'http://www.vgmusic.com/music/console/nintendo/' + sys.argv[1]
+# create the request for the web page
+r = requests.get(url)
+# get the page contents
+html_page = r.content
+# turn it into a file
+html_file = open("music_page.html", "w+")
+html_file.write(html_page)
+html_file.close()
+html_file = open("music_page.html")
 
 # create a subclass and override the handler methods
 class MyHTMLParser(HTMLParser):
@@ -13,7 +25,7 @@ class MyHTMLParser(HTMLParser):
 				# check if it's a midi file
 				if (attr[1][-4:] == '.mid'):
 					# TODO: store in a data structure or file
-					print attr[1]
+					print "MIDI file name:", attr[1]
 		
 
 	def handle_endtag(self, tag):
@@ -27,9 +39,11 @@ class MyHTMLParser(HTMLParser):
 # instantiate the parser and fed it some HTML
 parser = MyHTMLParser()
 
-print "Starting parser for", html_page
+print "Starting parser for", url 
 
-html_file = open(html_page)
+#html_file = open(html_page)
 html = html_file.read()
 
 parser.feed(html)
+
+#html_file.close()
