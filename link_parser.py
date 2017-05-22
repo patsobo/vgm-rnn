@@ -2,6 +2,27 @@ from HTMLParser import HTMLParser
 import sys
 import requests # for downloading stuff
 
+'''
+	Downloads a bunch of video game midi files.  Nice.
+
+	@arg1 The console for music to find (for now, only nintendo)
+	@arg2 The search string to search game titles by
+
+'''
+
+# downloads file
+def download_file(base_url, local_filename):
+	url = base_url + local_filename
+    # NOTE the stream=True parameter
+	r = requests.get(url, stream=True)
+    # "music/" is the directory you want to save music to
+	with open("music/" + local_filename, 'wb') as f:
+		for chunk in r.iter_content(chunk_size=1024): 
+			if chunk: # filter out keep-alive new chunks
+				f.write(chunk)
+				#f.flush() commented by recommendation from J.F.Sebastian
+	return
+
 # Get the page to find links for
 # create the url using the first argument.  Has to be nintendo for now
 url = 'http://www.vgmusic.com/music/console/nintendo/' + sys.argv[1] + '/'
@@ -23,35 +44,37 @@ class MyHTMLParser(HTMLParser):
 		self.in_filter = False
 
 	def handle_starttag(self, tag, attrs):
-		print "Encountered a start tag:", tag
+		#print "Encountered a start tag:", tag
 		for attr in attrs:
-			print "ATTRIBUTE:", attr
+			#print "ATTRIBUTE:", attr
 
 			# check for filter
 			if attr[0] == 'name':
-				if attr[1].contains(self.filter):
-					# TODO: some stuff idk
+				if self.filter.lower() in attr[1].lower():
 					self.in_filter = True
-					pass
+				else:
+					self.in_filter = False
 
 			# make sure you're reading a link
-			if attr[0] == 'href':
+			# and that you're inside the filtered music
+			if attr[0] == 'href' and self.in_filter:
 				# check if it's a midi file
 				if (attr[1][-4:] == '.mid'):
 					# TODO: store in a data structure or file
 					print "MIDI file name:", attr[1]
+					download_file(url, attr[1])
 		
 
 	def handle_endtag(self, tag):
 		pass
-		print "Encountered an end tag :", tag
+		#print "Encountered an end tag :", tag
 	
 	def handle_data(self, data):
 		pass
-		print "Encountered some data  :", data
+		#print "Encountered some data  :", data
 
 # instantiate the parser and fed it some HTML
-parser = MyHTMLParser()
+parser = MyHTMLParser(sys.argv[2])
 
 print "Starting parser for", url 
 
