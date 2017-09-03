@@ -11,14 +11,28 @@ import requests # for downloading stuff
 
 '''
 
+# stitches all the downloaded midi files into one file named input.txt,
+# as per the specifications laid out by karpathy's char-rnn
+def concat_files(source_dir, dest_dir):
+    print "Concatenating files and saving to", dest_dir
+    ensure_dir(dest_dir)
+    with open(dest_dir + "input.txt", 'w') as outfile:
+        for fname in os.listdir(source_dir):
+            with open(source_dir + fname) as infile:
+                for line in infile:
+                    outfile.write(line)
+
+    print "Successfully concatenated files."
+    return
+
 # downloads file
-def download_file(base_url, local_filename):
+def download_file(base_url, local_filename, parent_dir):
     url = base_url + local_filename
     # NOTE the stream=True parameter
     r = requests.get(url, stream=True)
     # "music/" is the directory you want to save music to
-    ensure_dir("music/")
-    with open("music/" + local_filename, 'wb') as f:
+    ensure_dir(parent_dir)
+    with open(parent_dir + local_filename, 'wb') as f:
         for chunk in r.iter_content(chunk_size=1024):
             if chunk: # filter out keep-alive new chunks
                 f.write(chunk)
@@ -48,9 +62,10 @@ html_file = open("music_page.html")
 
 # create a subclass and override the handler methods
 class MyHTMLParser(HTMLParser):
-    def __init__(self, the_filter):
+    def __init__(self, the_filter, midi_dir):
         HTMLParser.__init__(self)
         self.filter = the_filter
+        self.file_dir = midi_dir
         self.in_filter = False
 
     def handle_starttag(self, tag, attrs):
@@ -72,7 +87,7 @@ class MyHTMLParser(HTMLParser):
                 if (attr[1][-4:] == '.mid'):
                     # TODO: store in a data structure or file
                     print "MIDI file name:", attr[1]
-                    download_file(url, attr[1])
+                    download_file(url, attr[1], self.file_dir)
 
 
     def handle_endtag(self, tag):
@@ -83,8 +98,15 @@ class MyHTMLParser(HTMLParser):
         pass
         #print "Encountered some data  :", data
 
+
+
+# set the directories; one to write the downloaded midi files to, and the other
+# is the one inside the char-rnn project (the data/ folder)
+midi_dir = "music/"
+char_rnn_dir = "char-rnn/data/" + sys.argv[2] + "/"
+
 # instantiate the parser and feed it some HTML
-parser = MyHTMLParser(sys.argv[2])
+parser = MyHTMLParser(sys.argv[2], midi_dir)
 
 print "Starting parser for", url
 
@@ -94,3 +116,5 @@ html = html_file.read()
 parser.feed(html)
 
 #html_file.close()
+
+concat_files(midi_dir, char_rnn_dir)
