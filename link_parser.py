@@ -1,5 +1,6 @@
 from HTMLParser import HTMLParser
 import sys
+from subprocess import call
 import os   # for creating the music directory
 import requests # for downloading stuff
 
@@ -18,9 +19,14 @@ def concat_files(source_dir, dest_dir):
     ensure_dir(dest_dir)
     with open(dest_dir + "input.txt", 'w') as outfile:
         for fname in os.listdir(source_dir):
-            with open(source_dir + fname) as infile:
+            # convert to a csv format first
+            print('midicsv ' + source_dir + fname + ' ' + source_dir + fname + '.txt')
+            os.system('midicsv ' + source_dir + fname + ' ' + source_dir + fname + '.txt')
+            with open(source_dir + fname + ".txt") as infile:
                 for line in infile:
                     outfile.write(line)
+            # delete the file we made cause it's useless
+            #os.system("rm " + fname + ".txt")
 
     print "Successfully concatenated files."
     return
@@ -105,6 +111,7 @@ class MyHTMLParser(HTMLParser):
 midi_dir = "music/"
 char_rnn_dir = "char-rnn/data/" + sys.argv[2] + "/"
 
+# only re-download if music/ directory does not exist
 # instantiate the parser and feed it some HTML
 parser = MyHTMLParser(sys.argv[2], midi_dir)
 
@@ -117,4 +124,5 @@ parser.feed(html)
 
 #html_file.close()
 
+# stitch files together and send to char-rnn
 concat_files(midi_dir, char_rnn_dir)
