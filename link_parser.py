@@ -26,7 +26,7 @@ def concat_files(source_dir, dest_dir):
                 for line in infile:
                     outfile.write(line)
             # delete the file we made cause it's useless
-            #os.system("rm " + fname + ".txt")
+            os.system("rm " + fname + ".txt")
 
     print "Successfully concatenated files."
     return
